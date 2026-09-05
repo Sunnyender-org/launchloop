@@ -34,21 +34,25 @@
 1. **线上 robots.txt 必须 `curl` 核对，不能只看仓库。** CDN 层的托管规则会改你的 robots.txt 而不留痕。已加为 Found 门硬门槛。
 2. 一个做 GEO 诊断的产品自己被 CDN 开关拦了两家 AI 爬虫。清单的价值就在这种"自己觉得肯定没问题"的地方。
 
-## 待 Owner 的两步
+## Owner gate 两步（2026-09-05 已完成，Ender 授权）
 
-- [ ] Cloudflare Dashboard → `bflabs.cn` → Security → Settings → 关闭 **Managed robots.txt**（或 Content Signals 设 `ai-input=yes`）
-- [ ] 合并 PR #18 并 `wrangler deploy`
+- [x] Cloudflare 开关：实际位置不在 Security → Settings 的"配置"按钮里，而是 **AI Crawl Control → 概述 → "托管 robots.txt" 开关**（`/bflabs.cn/ai/overview`）。用 ego-browser 晨曦档案关闭。关闭后约 10 秒线上 robots.txt 的 `# BEGIN Cloudflare Managed content` 块消失
+- [x] PR #18 合并（advisory 文案审查因 CI 侧模型不可用而失败，与改动无关；两项仓库校验通过），`wrangler deploy` 版本 `82236830-7fe2-433c-adb6-7f8d3d6f5a80`
 
-## 复测（部署后填）
+## 复测（部署后）
 
-```bash
-python3 skills/launchloop-check/scripts/check.py --url https://readiness.bflabs.cn --tier lite \
-  --report records/readiness-bflabs-cn-2026-09-05-check-after.md
-```
+报告：`records/readiness-bflabs-cn-2026-09-05-check-after.md`。硬门槛 FAIL 0，退出码 0。
 
-| ID | 修复后状态 |
-|---|---|
-| L01 | |
-| F02 | |
-| F05 | |
-| F07 | |
+| ID | 修复前 | 修复后 |
+|---|---|---|
+| L01 http → https | FAIL（http 200） | PASS（301） |
+| F02 AI 搜索爬虫 | FAIL（ClaudeBot、Google-Extended 被 Cloudflare 托管块拦） | PASS |
+| F05 canonical | FAIL | PASS |
+| F07 JSON-LD | FAIL | PASS（Organization / WebSite / WebApplication） |
+| R01 安全头 | WARN（四项全缺） | PASS |
+| F09 Open Graph | WARN（三项全缺） | WARN（仅缺 og:image，需要一张 1200×630 的图） |
+
+## 遗留决策
+
+- **GPTBot**：关闭 Cloudflare 托管块后，GPTBot（OpenAI 训练用爬虫）从"被拦"变成"默认放行"。这是一个独立决策，此前由 Cloudflare 开关代为决定，现在回到团队手里。倾向：作为 GEO 产品，放行；若不同意，在 `public/robots.txt` 加 `User-agent: GPTBot` / `Disallow: /`。
+- og:image：需要设计一张 1200×630 分享图，放 `public/og.png` 后加 `og:image`。
