@@ -2,3 +2,5 @@
 # 上线记录里可能含截图与内部数据；默认不提交，需要公开的单独 force add
 records/*
 !records/.gitkeep
+__pycache__/
+*.pyc
