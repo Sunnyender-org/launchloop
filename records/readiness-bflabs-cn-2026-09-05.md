@@ -54,5 +54,5 @@
 
 ## 遗留决策
 
-- **GPTBot**：关闭 Cloudflare 托管块后，GPTBot（OpenAI 训练用爬虫）从"被拦"变成"默认放行"。这是一个独立决策，此前由 Cloudflare 开关代为决定，现在回到团队手里。倾向：作为 GEO 产品，放行；若不同意，在 `public/robots.txt` 加 `User-agent: GPTBot` / `Disallow: /`。
+- **GPTBot**：2026-09-05 Ender 决定放行。理由：GEO 产品，希望被模型学到。线上当前无 GPTBot 规则即默认放行，无需改动；下次动 robots.txt 时顺手加显式 `User-agent: GPTBot` / `Allow: /`，让决策可见。M12 关闭。
 - og:image：需要设计一张 1200×630 分享图，放 `public/og.png` 后加 `og:image`。
