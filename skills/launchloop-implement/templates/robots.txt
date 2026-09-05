@@ -1,0 +1,37 @@
+# robots.txt — production
+# LLM directory: {{BASE_URL}}/llms.txt
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /account/
+Disallow: /_next/
+
+# --- AI search crawlers: explicit allow so a future blanket rule cannot silently exclude them ---
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# --- Training-only crawler. Separate decision; record the reason in the launch record. ---
+# Allowing does not affect ChatGPT search citations (that is OAI-SearchBot above).
+# User-agent: GPTBot
+# Disallow: /
+
+Sitemap: {{BASE_URL}}/sitemap.xml
+
+# Notes (delete before shipping):
+# - robots.txt is not enough if Cloudflare "Bot Fight Mode" or a WAF blocks these UAs. Check Verified Bots.
+# - Never put `Disallow: /` here. Staging must generate its own robots.txt from an env variable (see env-gated-noindex.md).
+# - Keep /llms.txt reachable: do not Disallow it and do not put it behind auth or geo-blocks.

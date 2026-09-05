@@ -1,0 +1,17 @@
+{
+  "skill": "launchloop",
+  "cases": [
+    {"input": "我网站做好了，能上线了吗", "expect": "launchloop → launchloop-check"},
+    {"input": "上线前还缺什么", "expect": "launchloop → launchloop-check"},
+    {"input": "帮我跑一下 pre-launch audit，域名 example.com，仓库在 ./app", "expect": "launchloop-check"},
+    {"input": "修一下报告里的 F08 和 S03", "expect": "launchloop-implement"},
+    {"input": "把 llms.txt 加上", "expect": "launchloop-implement"},
+    {"input": "我的 API 被人刷了怎么办", "expect": "launchloop-implement (S05) + 人工设花费上限"},
+    {"input": "我是个人开发者，怎么收美元", "expect": "launchloop → LAUNCHLOOP.md 门 2 + CHINA.md，不代做决策"},
+    {"input": "ChatGPT 为什么不引用我的网站", "expect": "bflabs-agent-readiness (geo-discover)，不是 launchloop"},
+    {"input": "帮我写落地页文案", "expect": "不触发 launchloop"},
+    {"input": "帮我实现登录功能", "expect": "不触发 launchloop"},
+    {"input": "上线当天要做什么", "expect": "launchloop → 读 LAUNCHLOOP.md 阶段二，无需工具"},
+    {"input": "第一次做网站，用 Cursor 写的，想放上去给人用", "expect": "launchloop vibe coder 短路径 → launchloop-check --tier lite"}
+  ]
+}

@@ -1,6 +1,6 @@
 # LaunchLoop 主清单
 
-版本：v0.1（2026-09-05）
+版本：v0.2（2026-09-05）
 适用：小团队自助 SaaS / Web 产品，从"前后端开发完成"到"有人付钱、有人搜到"。
 
 图例：
@@ -9,6 +9,25 @@
 - `[O]` 可选：视产品形态决定。
 
 每一项后面括号里是依据来源，完整 URL 见 `references.md`。
+自动化检查用 `skills/launchloop-check`，修复用 `skills/launchloop-implement`；清单是它们的规格。
+
+---
+
+## 分级：先选档，再开始
+
+| 档 | 适用 | 硬门槛数量 | 预计耗时 |
+|---|---|---|---|
+| **Lite** | 不收钱：作品集、开源项目主页、免费工具、side project | 约 14 项 | 半天 |
+| **Standard** | 收钱：任何有付费、订阅、试用转付费的产品 | 约 45 项 | 3–5 天 |
+
+**Lite 档 = 以下 14 项，其余全部跳过：**
+
+Ready：环境隔离 · 零硬编码密钥 · 密钥不进前端 bundle · staging noindex 不进生产 · 错误追踪 · 昂贵接口有 rate limit 与花费上限 · 能回滚
+Found：robots 无误拦 · sitemap 已提交 · GSC 验证 · 关键页 SSR 文本 · AI 爬虫放行 · JSON-LD · llms.txt
+
+Lite 档的产品一旦开始收钱，从 Live 门补起，不需要重走 Ready 和 Found。
+
+**刚学会 vibe coding、第一次上线的人：从 Lite 开始。** 就算你打算收钱，也先把 Lite 的 14 项走完再进 Live 门。这 14 项里的安全项是 AI 生成代码的默认漏洞，不做的后果是第二天 API 额度被刷光或用户数据全裸。
 
 ---
 
@@ -23,6 +42,20 @@
 - [ ] `[H]` 代码里零硬编码密钥，全部走环境变量或 secrets vault；`grep -r "sk_live\|sk_test" src/` 为空
 - [ ] `[H]` staging 的 `noindex` / `Disallow: /` 不会带进生产（这是 SEO 上线第一杀手，见门 4）
 - [ ] `[S]` 环境变量用 schema 校验（如 Zod），缺变量时启动即失败而不是运行时才炸
+
+**安全 —— vibe coded 站的头号死法**
+
+AI 生成的代码默认是"能跑"，不是"安全"。下面每一条都是 2025–2026 年真实发生过、一晚上就能毁掉一个产品的事故。
+
+- [ ] `[H]` **密钥不进前端 bundle**：`NEXT_PUBLIC_` / `VITE_` / `REACT_APP_` / `EXPO_PUBLIC_` 前缀的变量里没有任何 secret、service role key、私钥或 AI API key。在部署产物里 `grep -r "sk-\|sk_live\|service_role" .next/static dist/` 为空。Supabase 的 `anon` key 可以进前端，`service_role` key 绝对不能
+- [ ] `[H]` **数据库行级权限**：Supabase / PostgREST 每张表都 `enable row level security` 并有 policy；Firebase 规则不是 `allow read, write: if true`。用另一个账号登录，尝试读别人的数据，必须失败
+- [ ] `[H]` **昂贵接口有 rate limit 和花费上限**：任何调用 AI API、发邮件、发短信、生成图片的端点，按 IP 和按用户限流；OpenAI / Anthropic 等后台设了月度花费硬上限。**这是 vibe coded 站被刷额度的唯一防线**——没有它，一个脚本一晚上能烧掉几千美元
+- [ ] `[H]` **每个写操作都验身份**：API route、Server Action、Edge Function 里的写操作都在服务端校验 session，不信任前端传来的 `userId`
+- [ ] `[H]` **`.env` 不在 git 里**：`git ls-files | grep -i "\.env"` 只能出现 `.env.example`；`/.env`、`/.git/config` 在生产 URL 上返回 404 或 403
+- [ ] `[S]` **Prompt injection 基线**：系统提示词里不放密钥或内部 URL；工具调用结果和用户上传内容当作不可信数据，不当作指令；模型输出渲染前做 HTML 转义
+- [ ] `[S]` 安全响应头：`Strict-Transport-Security`、`X-Content-Type-Options: nosniff`、`X-Frame-Options` 或 CSP `frame-ancestors`、`Referrer-Policy`
+- [ ] `[S]` `npm audit` / `pip-audit` 无 critical；依赖锁文件已提交
+- [ ] `[O]` 文件上传：限制类型与大小，存对象存储不存服务器磁盘，不用用户提供的文件名
 
 **可观测**
 - [ ] `[H]` 健康检查端点（`/api/health` 或同等）返回 200，并接入部署平台的 health check
@@ -125,6 +158,7 @@
 **GEO 第一档：上线日硬门槛**
 - [ ] `[H]` `robots.txt` 明确放行你想出现的 AI 搜索爬虫。至少：`OAI-SearchBot`（ChatGPT 搜索结果，不放行就不出现）、`PerplexityBot`、`ClaudeBot`、`Google-Extended`、`Bingbot`
 - [ ] `[H]` **单独决策** `GPTBot`（训练用，不影响 ChatGPT 搜索引用）是否放行，并记录理由
+- [ ] `[H]` **线上 `robots.txt` 与仓库里的一致**：`curl https://domain/robots.txt` 看一眼。Cloudflare 的 "Managed robots.txt / Content Signals" 开关会在前面自动插一段拦 ClaudeBot、Google-Extended、GPTBot 的规则，仓库里看不到；Bot Fight Mode 也会在 HTTP 层拦这些 UA。真实案例：readiness.bflabs.cn 被这个开关拦了两家
 - [ ] `[H]` JSON-LD 结构化数据：`Organization`（含 logo、sameAs 社交链接）、`SoftwareApplication` 或 `Product`（含定价）、有 FAQ 的页面加 `FAQPage`。**内容必须与页面可见文本一致**（Google 明文要求）。Google 2023 年弃用了 FAQ 富摘要，但 AI 引擎仍在解析 `FAQPage`
 - [ ] `[H]` 关键页每个 H2 下的第一段是 30–90 字的**直接回答**，能独立成句被摘走（ChatGPT / Perplexity / AI Overviews 都优先抽这一段）
 - [ ] `[H]` 有一页"可引用的一页纸"：产品是什么、给谁用、不给谁用、定价、与主要替代品的对比。AI 和人类都要能直接摘
@@ -196,7 +230,7 @@
 
 进入下一门前，这些必须全绿：
 
-**Ready**：环境隔离 · 零硬编码密钥 · staging noindex 不进生产 · 健康检查 · 错误追踪 · 核心日志无 PII · 备份且演练过恢复 · 可回滚 · 邮件可送达 · 账号全链路通
+**Ready**：环境隔离 · 零硬编码密钥 · 密钥不进前端 bundle · 每张表 RLS · 昂贵接口限流 + 花费上限 · 写操作验身份 · .env 不在 git · staging noindex 不进生产 · 健康检查 · 错误追踪 · 核心日志无 PII · 备份且演练过恢复 · 可回滚 · 邮件可送达 · 账号全链路通
 **Live**：MoR 决策已定 · live 密钥 · live webhook 验签 · webhook 延迟/重复/乱序三条通过 · 以支付平台为账本 · 失败提示友好 · 四页法务 · 退款政策与平台一致 · 支持邮箱有人 · HTTPS 与单一 canonical 主机
 **Paid**：真卡走完 买→开权益→发票→退款→取消 · 有截图 · 欧洲卡 3DS 通过
 **Found**：robots 无误拦 · sitemap 已提交 · GSC + Bing 验证 · title/canonical/h1 · 关键页 SSR 文本 · AI 爬虫放行 · GPTBot 单独决策 · JSON-LD 与可见文本一致 · H2 下 30–90 字直接回答 · 可引用一页纸 · llms.txt · Agent Readiness 扫描三轴 pass · 定价页与后台一致 · 支持渠道 · signup→activate→pay 事件

@@ -43,23 +43,64 @@ LaunchLoop 是流程，不是工具。我们已有的三份 GEO 资产分别接�
 
 一句话：**Agent Readiness 是 Found 门的 linter，bflabs-geo 是 Found 到 Loop 的执行器，BeefAPI 是第一个跑完整条回路的案例。** LaunchLoop 补的是它们前面的 Ready / Live / Paid 三道门，以及把 GEO 放回整个上线流程里的位置。
 
+## 先检查，再让你的 Agent 修
+
+LaunchLoop 不只是清单。它带两个 Agent Skill，和 Agent Readiness 同一套哲学：
+
+```
+launchloop-check ──► 报告（PASS / FAIL / WARN / UNKNOWN / MANUAL）──► launchloop-implement ──► 重跑 check
+   只读，零依赖                                                          一个 ID 一个改动
+```
+
+```bash
+# 诊断：对生产 URL + 本机仓库跑一遍，硬门槛 FAIL 返回 1
+python3 skills/launchloop-check/scripts/check.py \
+  --url https://your-domain.com --repo . --tier lite \
+  --report records/my-app-check.md --json records/my-app-check.json
+```
+
+自动检查覆盖：robots / AI 爬虫放行 / sitemap / noindex / title-canonical-h1 / SSR 文本 / JSON-LD / llms.txt / Open Graph / https 跳转 / canonical 主机 / 安全头 / .env 与 .git 暴露 / 健康端点 / 法务页 / 定价页，以及仓库侧的 .env 跟踪 / 硬编码密钥 / 公开前缀泄密 / Supabase RLS / 限流 / webhook 幂等 / noindex 环境控制。人只能做的（真卡烟测、备份演练、MoR 决策）标为 MANUAL，在 record 里勾。
+
+每个 FAIL 的 ID 在 `skills/launchloop-implement/references/fixes.md` 里有对应修法和 `templates/` 里的模板（`llms.txt`、`robots.txt`、JSON-LD、安全头、webhook 幂等、RLS SQL、限流、法务页骨架、健康端点、按环境 noindex）。
+
+## 分级
+
+| 档 | 适用 | 硬门槛 | 耗时 |
+|---|---|---|---|
+| **Lite** | 不收钱：作品集、开源主页、免费工具、side project | 14 项 | 半天 |
+| **Standard** | 收钱：任何有付费、订阅、试用转付费的产品 | 约 45 项 | 3–5 天 |
+
+**刚学会 vibe coding、第一次上线：从 Lite 开始。** Lite 里的 7 项安全检查（密钥进前端、RLS、限流 + 花费上限、写操作验身份、.env 不在 git、staging noindex、能回滚）是 AI 生成代码的默认漏洞，不修的后果是第二天 API 额度被刷光或用户数据全裸。
+
 ## 文件
 
 | 文件 | 用途 |
 |---|---|
-| [`LAUNCHLOOP.md`](./LAUNCHLOOP.md) | 主清单。按 Pre-launch / Launch / Post-launch 三阶段、四道门展开 |
-| [`templates/launch-record.md`](./templates/launch-record.md) | 每次上线复制一份，填 owner、go/no-go、烟测记录 |
+| [`LAUNCHLOOP.md`](./LAUNCHLOOP.md) | 主清单。分级、三阶段、四道门、安全小节、打印版速查 |
+| [`CHINA.md`](./CHINA.md) | 中国开发者路径：ICP 备案、个人无 Stripe 的收款三条路、百度与国内 AI 平台 |
+| [`skills/launchloop/`](./skills/launchloop/SKILL.md) | 入口 Skill：问三个问题，路由到 check 或 implement |
+| [`skills/launchloop-check/`](./skills/launchloop-check/SKILL.md) | 诊断 Skill + `scripts/check.py` |
+| [`skills/launchloop-implement/`](./skills/launchloop-implement/SKILL.md) | 实施 Skill + `references/fixes.md` + `templates/` |
+| [`templates/launch-record.md`](./templates/launch-record.md) | 每次上线复制一份，填 owner、MoR 决策、烟测证据、AI 可见度基线、D30 复盘 |
 | [`references.md`](./references.md) | 所有依据的来源与 2026 年调研结论，含哪些说法不可信 |
 
 ## 怎么用
 
-1. 新产品或大版本上线前 14 天，复制 `templates/launch-record.md` 到 `records/<产品名>-<日期>.md`。
-2. 按 `LAUNCHLOOP.md` 逐门过，硬门槛全部勾完才进下一门。
-3. 上线日只做分发和盯盘，不临场改计费。
-4. D30 复盘写回 record，把这次踩到的坑回流到 `LAUNCHLOOP.md`。
-5. 后续小版本发布只需复用 Ready + Live 的支付 / 监控子集。
+1. 复制 `templates/launch-record.md` 到 `records/<产品名>-<日期>.md`，填基本信息与 MoR 决策。
+2. 跑 `launchloop-check`，报告落 `records/`。
+3. 硬门槛 FAIL 交给 `launchloop-implement`，一个 ID 一个改动；MANUAL 项人做，填进 record。
+4. 重跑 check，前后报告都留着。
+5. 上线日只做分发和盯盘，不临场改计费。
+6. D1–D3 盯盘，D7 建 AI 可见度基线，D30 复盘写回 record，踩到的坑回流到 `LAUNCHLOOP.md`。
+7. 后续小版本发布只需复用 Ready + Live 的子集。
+
+## 安装 Skill
+
+把 `skills/` 下三个目录复制或软链到你的 Agent 的 skills 目录（Cursor `~/.cursor/skills/`、Claude Code `~/.claude/skills/`、Codex `~/.codex/skills/`、或项目内 `.agents/skills/`）。脚本零依赖，Python 3.9+。
 
 ## 边界
 
 - 这是**小团队自助 SaaS / Web 产品**的 SOP。销售驱动的 B2B 大客户、移动 App Store 上架、硬件生产不在范围。
 - 清单是活文档，随每次上线复盘更新。来源与结论的时效见 `references.md`。
+- `launchloop-check` 的密钥检测是正则启发式，PASS 不等于没有泄露；已提交过再删掉的密钥仍在 git 历史里。
+- 法务页模板只是结构骨架，不是法律意见。

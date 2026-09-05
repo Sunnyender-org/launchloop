@@ -1,0 +1,40 @@
+# {{PRODUCT_NAME}}
+
+> {{ONE_PARAGRAPH_30_TO_60_WORDS: what it is, who it is for, what it costs or how pricing works, what it is not.}}
+
+{{OPTIONAL_CONTEXT_PARAGRAPH: the audience you serve, the topics you are authoritative on, what a reader should expect. This is the paragraph LLMs use to weight everything below.}}
+
+## Product
+
+- [Homepage]({{BASE_URL}}/): {{one sentence}}
+- [Pricing]({{BASE_URL}}/pricing): Plan comparison with current prices and limits
+- [What it is and is not]({{BASE_URL}}/about): Who should use it, who should not, how it compares to {{MAIN_ALTERNATIVE}}
+- [Changelog]({{BASE_URL}}/changelog): Dated release notes
+
+## Docs
+
+- [Quickstart]({{BASE_URL}}/docs/quickstart): From signup to first result in five minutes
+- [API reference]({{BASE_URL}}/docs/api): Endpoints, authentication, rate limits, errors
+- [FAQ]({{BASE_URL}}/docs/faq): Account, billing, refunds, data handling
+
+## Company
+
+- [About]({{BASE_URL}}/about): Team, contact, jurisdiction
+- [Terms of Service]({{BASE_URL}}/terms)
+- [Privacy Policy]({{BASE_URL}}/privacy)
+- [Refund Policy]({{BASE_URL}}/refund)
+
+## Optional
+
+- [Blog]({{BASE_URL}}/blog): Long-form posts, lower priority than docs
+- [Status]({{BASE_URL}}/status)
+
+<!--
+Rules (delete this comment before shipping):
+- Start with `# Name`, then one blockquote paragraph.
+- 20–80 links total, 3–30 per H2. All URLs absolute, all returning 200.
+- One-line description after each link: specific, not "Pricing" but "Plan comparison with current prices".
+- Serve as text/plain or text/markdown at https://domain/llms.txt. Keep under 100KB.
+- Add `# LLM directory: https://domain/llms.txt` as a comment line in robots.txt.
+- Update whenever pricing, plans, or key pages change. Stale beats nothing; fresh beats stale.
+-->
